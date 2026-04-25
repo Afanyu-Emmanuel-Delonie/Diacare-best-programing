@@ -1,0 +1,13 @@
+package com.auca.diacare.patient.service;
+
+import java.util.Optional;
+import java.util.UUID;
+
+import com.auca.diacare.patient.model.Patient;
+
+public interface PatientService {
+    Patient registerPatient(Patient patient);
+    Optional<Patient> getPatientByPublicId(UUID publicId);
+    Patient updatePatientProfile(UUID publicId, Patient patientDetails);
+    void deletePatient(UUID publicId);
+}
