@@ -59,6 +59,19 @@ public class User {
         }
     }
 
+    // Constructor for creating new users
+    public User(String username, String email, String password, Role role) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.isActive = true;
+    }
+
+    // No-arg constructor for JPA
+    public User() {
+    }
+
     // Getters and Setters
     public Long getId() {
         return id;

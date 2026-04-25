@@ -1,0 +1,16 @@
+package com.auca.diacare.appointment.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.auca.diacare.appointment.model.Appointment;
+import com.auca.diacare.appointment.model.Appointment.Status;
+
+public interface AppointmentService {
+    Appointment createAppointment(Appointment appointment);
+    Optional<Appointment> getAppointmentById(Long id);
+    List<Appointment> getAppointmentsByPatientEmail(String email);
+    List<Appointment> getAppointmentsByDoctorEmail(String email);
+    Appointment updateStatus(Long id, Status status);
+    void cancelAppointment(Long id);
+}

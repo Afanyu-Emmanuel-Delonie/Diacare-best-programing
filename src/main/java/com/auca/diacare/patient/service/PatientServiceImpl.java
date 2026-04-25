@@ -10,7 +10,7 @@ import com.auca.diacare.auth.repository.UserRepository;
 import com.auca.diacare.patient.model.Patient;
 import com.auca.diacare.patient.repository.PatientRepository;
 
-import lombok.RequiredArgsConstructor;
+// import lombok.RequiredArgsConstructor;
 
 @Service
 // @RequiredArgsConstructor
@@ -32,6 +32,11 @@ public class PatientServiceImpl implements PatientService {
     @Override
     public Optional<Patient> getPatientByPublicId(UUID publicId) {
         return patientRepository.findByUser_PublicId(publicId);
+    }
+
+    @Override
+    public Optional<Patient> getPatientByEmail(String email) {
+        return patientRepository.findByUserEmail(email);
     }
 
     @Override

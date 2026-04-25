@@ -11,14 +11,19 @@ import com.auca.diacare.admin.repository.AdminRepository;
 import com.auca.diacare.auth.model.User;
 import com.auca.diacare.auth.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
+// import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
+// @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
 
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
+
+    public AdminServiceImpl(AdminRepository adminRepository, UserRepository userRepository) {
+        this.adminRepository = adminRepository;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public Admin registerAdmin(Admin admin) {

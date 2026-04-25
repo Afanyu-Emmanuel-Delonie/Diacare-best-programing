@@ -8,6 +8,7 @@ import com.auca.diacare.patient.model.Patient;
 public interface PatientService {
     Patient registerPatient(Patient patient);
     Optional<Patient> getPatientByPublicId(UUID publicId);
+    Optional<Patient> getPatientByEmail(String email);
     Patient updatePatientProfile(UUID publicId, Patient patientDetails);
     void deletePatient(UUID publicId);
 }

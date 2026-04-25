@@ -9,13 +9,17 @@ import org.springframework.stereotype.Service;
 import com.auca.diacare.doctor.model.Doctor;
 import com.auca.diacare.doctor.repository.DoctorRepository;
 
-import lombok.RequiredArgsConstructor;
+// import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
+// @RequiredArgsConstructor
 public class DoctorServiceImpl implements DoctorService {
 
     private final DoctorRepository doctorRepository;
+
+    public DoctorServiceImpl(DoctorRepository doctorRepository) {
+        this.doctorRepository = doctorRepository;
+    }
 
     @Override
     public Doctor registerDoctor(Doctor doctor) {
@@ -25,6 +29,11 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public Optional<Doctor> getDoctorByPublicId(UUID publicId) {
         return doctorRepository.findByUser_PublicId(publicId);
+    }
+
+    @Override
+    public Optional<Doctor> getDoctorByEmail(String email) {
+        return doctorRepository.findByUserEmail(email);
     }
 
     @Override

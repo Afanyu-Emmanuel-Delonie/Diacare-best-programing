@@ -6,7 +6,7 @@ import com.auca.diacare.auth.dto.RegisterRequest;
 import com.auca.diacare.auth.model.User;
 import com.auca.diacare.auth.repository.UserRepository;
 import com.auca.diacare.common.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
+// import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,12 +31,11 @@ public class AuthService {
         }
 
         // 2. Build the user — password is hashed before saving
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .build();
+        User user = new User(
+                request.getUsername(),
+                request.getEmail(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getRole());
 
         // 3. Save to DB
         userRepository.save(user);

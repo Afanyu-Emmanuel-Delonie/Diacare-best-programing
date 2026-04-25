@@ -1,17 +1,22 @@
 package com.auca.diacare.common.config;
 
+import com.auca.diacare.auth.repository.UserRepository;
 import com.auca.diacare.common.security.JwtAuthFilter;
-import lombok.RequiredArgsConstructor;
+// import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -19,9 +24,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final UserRepository userRepository;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserRepository userRepository) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.userRepository = userRepository;
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return email -> userRepository.findByEmail(email)
+                .map(user -> new org.springframework.security.core.userdetails.User(
+                        user.getEmail(),
+                        user.getPassword(),
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
     }
 
     @Bean
@@ -35,7 +52,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html",
+                                "/error")
                         .permitAll()
 
                         // Role-based access
@@ -45,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/appointments/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .requestMatchers("/api/v1/prescriptions/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
                         .requestMatchers("/api/v1/notifications/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/v1/glucose/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
+                        .requestMatchers("/api/v1/metrics/**").hasAnyRole("PATIENT", "DOCTOR", "ADMIN")
 
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

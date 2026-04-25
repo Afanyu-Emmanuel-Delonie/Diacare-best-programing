@@ -2,6 +2,7 @@ package com.auca.diacare.patient.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,16 +16,21 @@ import java.util.UUID;
 import com.auca.diacare.patient.dto.PatientDTO;
 import com.auca.diacare.patient.model.Patient;
 import com.auca.diacare.patient.service.PatientService;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/patients")
+@Tag(name = "Patients", description = "Patient profile management")
+@SecurityRequirement(name = "bearerAuth")
 public class PatientController {
 
     @Autowired
     private PatientService patientService;
 
+    @Operation(summary = "Create patient profile")
     @PostMapping
     public ResponseEntity<Patient> register(@Valid @RequestBody PatientDTO dto) {
         Patient patient = new Patient();
@@ -39,6 +45,16 @@ public class PatientController {
 
     }
 
+    @Operation(summary = "Get my profile", description = "Returns the patient profile of the currently authenticated user")
+    @GetMapping("/me")
+    public ResponseEntity<Patient> getMyProfile(Authentication authentication) {
+        String email = authentication.getName();
+        return patientService.getPatientByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Get patient by public ID")
     @GetMapping("/{publicId}")
     public ResponseEntity<Patient> getPatientByPublicId(@PathVariable UUID publicId) {
         return patientService.getPatientByPublicId(publicId)
@@ -46,6 +62,7 @@ public class PatientController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Update patient profile")
     @PutMapping("/{publicId}")
     public ResponseEntity<Patient> updatePatientProfile(@PathVariable UUID publicId,
             @Valid @RequestBody PatientDTO dto) {

@@ -9,6 +9,7 @@ import com.auca.diacare.doctor.model.Doctor;
 public interface DoctorService {
     Doctor registerDoctor(Doctor doctor);
     Optional<Doctor> getDoctorByPublicId(UUID publicId);
+    Optional<Doctor> getDoctorByEmail(String email);
     List<Doctor> getDoctorsBySpecialization(String specialization);
     Doctor updateDoctorProfile(UUID publicId, Doctor doctorDetails);
     void deleteDoctor(UUID publicId);
