@@ -65,6 +65,12 @@ public class GlucoseController {
         return ResponseEntity.ok(glucoseService.getMyReadings(authentication.getName()));
     }
 
+    @Operation(summary = "Get all glucose readings (doctor/admin)")
+    @GetMapping("/all")
+    public ResponseEntity<List<GlucoseReading>> getAll() {
+        return ResponseEntity.ok(glucoseService.getAllReadings());
+    }
+
     @Operation(summary = "Get glucose trend analysis", description = "Returns 7/30-day averages, high reading counts, and risk level (LOW/MODERATE/HIGH)")
     @GetMapping("/my/trend")
     public ResponseEntity<GlucoseTrendResponse> getMyTrend(Authentication authentication) {

@@ -13,12 +13,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 // @Data
 // @Builder
 // @NoArgsConstructor
 // @AllArgsConstructor
 @Entity
 @Table(name = "users")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password"})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

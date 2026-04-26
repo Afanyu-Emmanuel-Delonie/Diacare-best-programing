@@ -15,11 +15,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import com.auca.diacare.auth.model.User;
 import com.auca.diacare.auth.repository.UserRepository;
+import com.auca.diacare.appointment.repository.AppointmentRepository;
 import com.auca.diacare.doctor.dto.DoctorDTO;
+import com.auca.diacare.doctor.dto.DoctorDashboardResponse;
 import com.auca.diacare.doctor.model.Doctor;
 import com.auca.diacare.doctor.service.DoctorService;
+import com.auca.diacare.patient.model.Patient;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -34,10 +39,13 @@ public class DoctorController {
 
     private final DoctorService doctorService;
     private final UserRepository userRepository;
+    private final AppointmentRepository appointmentRepository;
 
-    public DoctorController(DoctorService doctorService, UserRepository userRepository) {
+    public DoctorController(DoctorService doctorService, UserRepository userRepository,
+            AppointmentRepository appointmentRepository) {
         this.doctorService = doctorService;
         this.userRepository = userRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     @Operation(summary = "Register doctor profile")
@@ -71,6 +79,12 @@ public class DoctorController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "List all doctors")
+    @GetMapping("/all")
+    public ResponseEntity<List<Doctor>> getAll() {
+        return ResponseEntity.ok(doctorService.getAllDoctors());
+    }
+
     @Operation(summary = "Search doctors by specialization")
     @GetMapping
     public ResponseEntity<List<Doctor>> getBySpecialization(@RequestParam String specialization) {
@@ -92,5 +106,24 @@ public class DoctorController {
     public ResponseEntity<Void> delete(@PathVariable UUID publicId) {
         doctorService.deleteDoctor(publicId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get doctor dashboard — alerts, appointments, patient count")
+    @GetMapping("/dashboard")
+    public ResponseEntity<DoctorDashboardResponse> getDashboard(Authentication authentication) {
+        return ResponseEntity.ok(doctorService.getDashboard(authentication.getName()));
+    }
+
+    @Operation(summary = "Get my patients — derived from appointments")
+    @GetMapping("/my-patients")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<Patient>> getMyPatients(Authentication authentication) {
+        List<Patient> patients = appointmentRepository
+                .findByDoctor_User_Email(authentication.getName())
+                .stream()
+                .map(a -> a.getPatient())
+                .distinct()
+                .toList();
+        return ResponseEntity.ok(patients);
     }
 }

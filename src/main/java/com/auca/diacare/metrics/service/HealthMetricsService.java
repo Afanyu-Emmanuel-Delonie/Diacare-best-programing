@@ -10,6 +10,7 @@ public interface HealthMetricsService {
     HealthMetrics recordMetrics(HealthMetrics metrics);
     Optional<HealthMetrics> getLatest(String email);
     List<HealthMetrics> getHistory(String email);
+    List<HealthMetrics> getAll();
     PatientDashboardResponse getDashboard(String email);
     void deleteMetrics(Long id);
 }

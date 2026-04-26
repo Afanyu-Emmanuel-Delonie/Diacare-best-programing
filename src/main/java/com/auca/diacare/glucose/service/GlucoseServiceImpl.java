@@ -83,15 +83,23 @@ public class GlucoseServiceImpl implements GlucoseService {
     }
 
     @Override
+    public List<GlucoseReading> getAllReadings() {
+        return glucoseRepository.findAll();
+    }
+
+    @Override
     public void deleteReading(Long id) {
         glucoseRepository.findById(id).orElseThrow(() -> new RuntimeException("Reading not found"));
         glucoseRepository.deleteById(id);
     }
 
     private String calculateRisk(Double avg7, Long highCount7) {
-        if (avg7 == null) return "UNKNOWN";
-        if (avg7 > 10.0 || (highCount7 != null && highCount7 >= 5)) return "HIGH";
-        if (avg7 > 7.0 || (highCount7 != null && highCount7 >= 2)) return "MODERATE";
+        if (avg7 == null)
+            return "UNKNOWN";
+        if (avg7 > 10.0 || (highCount7 != null && highCount7 >= 5))
+            return "HIGH";
+        if (avg7 > 7.0 || (highCount7 != null && highCount7 >= 2))
+            return "MODERATE";
         return "LOW";
     }
 }

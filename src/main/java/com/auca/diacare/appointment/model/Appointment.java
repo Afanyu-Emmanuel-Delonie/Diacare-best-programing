@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import com.auca.diacare.doctor.model.Doctor;
 import com.auca.diacare.patient.model.Patient;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,6 +22,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "appointments")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Appointment {
 
     public enum Status { PENDING, CONFIRMED, CANCELLED, COMPLETED }

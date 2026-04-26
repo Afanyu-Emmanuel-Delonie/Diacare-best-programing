@@ -8,10 +8,8 @@ import jakarta.validation.constraints.NotNull;
 
 public class AppointmentDTO {
 
-    @NotNull(message = "Patient public ID is required")
     private java.util.UUID patientPublicId;
 
-    @NotNull(message = "Doctor public ID is required")
     private java.util.UUID doctorPublicId;
 
     @NotNull(message = "Appointment date is required")

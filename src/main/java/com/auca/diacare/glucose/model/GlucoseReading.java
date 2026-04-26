@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import com.auca.diacare.patient.model.Patient;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +20,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "glucose_readings")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class GlucoseReading {
 
     public enum MealContext { FASTING, BEFORE_MEAL, AFTER_MEAL, BEDTIME, RANDOM }

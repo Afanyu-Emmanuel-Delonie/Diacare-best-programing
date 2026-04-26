@@ -1,6 +1,7 @@
 package com.auca.diacare.metrics.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -75,6 +76,33 @@ public class HealthMetricsController {
     @GetMapping("/dashboard")
     public ResponseEntity<PatientDashboardResponse> getDashboard(Authentication authentication) {
         return ResponseEntity.ok(metricsService.getDashboard(authentication.getName()));
+    }
+
+    @Operation(summary = "Record health metrics for a specific patient (doctor use)")
+    @PostMapping("/for-patient/{patientPublicId}")
+    public ResponseEntity<HealthMetrics> recordForPatient(
+            @PathVariable UUID patientPublicId,
+            @RequestBody HealthMetricsDTO dto) {
+        Patient patient = patientRepository.findByUser_PublicId(patientPublicId)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        HealthMetrics metrics = new HealthMetrics();
+        metrics.setPatient(patient);
+        metrics.setWeight(dto.getWeight());
+        metrics.setHeight(dto.getHeight());
+        metrics.setHba1c(dto.getHba1c());
+        metrics.setBloodPressureSystolic(dto.getBloodPressureSystolic());
+        metrics.setBloodPressureDiastolic(dto.getBloodPressureDiastolic());
+        metrics.setCholesterol(dto.getCholesterol());
+        metrics.setRecordedAt(dto.getRecordedAt());
+
+        return ResponseEntity.ok(metricsService.recordMetrics(metrics));
+    }
+
+    @Operation(summary = "Get all metrics records (doctor/admin use)")
+    @GetMapping("/all")
+    public ResponseEntity<List<HealthMetrics>> getAll() {
+        return ResponseEntity.ok(metricsService.getAll());
     }
 
     @Operation(summary = "Delete a metrics record")

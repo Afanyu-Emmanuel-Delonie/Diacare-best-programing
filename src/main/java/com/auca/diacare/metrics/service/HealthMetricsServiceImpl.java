@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.auca.diacare.appointment.model.Appointment;
 import com.auca.diacare.appointment.repository.AppointmentRepository;
@@ -97,6 +98,12 @@ public class HealthMetricsServiceImpl implements HealthMetricsService {
         dashboard.setHealthSummary(summary);
 
         return dashboard;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HealthMetrics> getAll() {
+        return metricsRepository.findAll();
     }
 
     @Override

@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import com.auca.diacare.auth.model.User;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +20,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "notifications")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Notification {
 
     public enum Type { APPOINTMENT_REMINDER, PRESCRIPTION_ISSUED, GENERAL }

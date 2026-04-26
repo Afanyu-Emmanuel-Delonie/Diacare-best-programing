@@ -2,7 +2,7 @@ package com.auca.diacare.common.config;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.LocalTime;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -60,26 +60,16 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Skip seeding if data already exists
         if (userRepository.count() > 0) return;
 
         System.out.println(">>> Seeding DiaCare database...");
 
         // ── Users ──────────────────────────────────────────────────────────────
-        User adminUser = userRepository.save(new User("admin", "admin@diacare.com",
-                passwordEncoder.encode("Admin@123"), Role.ADMIN));
-
-        User doctorUser = userRepository.save(new User("dr.mugisha", "mugisha@diacare.com",
-                passwordEncoder.encode("Doctor@123"), Role.DOCTOR));
-
-        User doctorUser2 = userRepository.save(new User("dr.uwimana", "uwimana@diacare.com",
-                passwordEncoder.encode("Doctor@123"), Role.DOCTOR));
-
-        User patientUser = userRepository.save(new User("jean.baptiste", "jean@diacare.com",
-                passwordEncoder.encode("Patient@123"), Role.PATIENT));
-
-        User patientUser2 = userRepository.save(new User("alice.mutoni", "alice@diacare.com",
-                passwordEncoder.encode("Patient@123"), Role.PATIENT));
+        User adminUser   = userRepository.save(new User("admin",         "admin@diacare.com",  passwordEncoder.encode("Admin@123"),   Role.ADMIN));
+        User doctorUser  = userRepository.save(new User("dr.mugisha",    "mugisha@diacare.com", passwordEncoder.encode("Doctor@123"), Role.DOCTOR));
+        User doctorUser2 = userRepository.save(new User("dr.uwimana",    "uwimana@diacare.com", passwordEncoder.encode("Doctor@123"), Role.DOCTOR));
+        User patientUser = userRepository.save(new User("jean.baptiste", "jean@diacare.com",    passwordEncoder.encode("Patient@123"), Role.PATIENT));
+        User patientUser2= userRepository.save(new User("alice.mutoni",  "alice@diacare.com",   passwordEncoder.encode("Patient@123"), Role.PATIENT));
 
         // ── Doctor Profiles ────────────────────────────────────────────────────
         Doctor doctor1 = new Doctor();
@@ -113,138 +103,214 @@ public class DataSeeder implements CommandLineRunner {
         patient2.setTargetHbA1c(6.5);
         patientRepository.save(patient2);
 
-        // ── Appointments ───────────────────────────────────────────────────────
-        Appointment apt1 = new Appointment();
-        apt1.setPatient(patient1);
-        apt1.setDoctor(doctor1);
-        apt1.setAppointmentDate(LocalDateTime.now().plusDays(3));
-        apt1.setStatus(Appointment.Status.CONFIRMED);
-        apt1.setNotes("Quarterly HbA1c review");
-        appointmentRepository.save(apt1);
-
-        Appointment apt2 = new Appointment();
-        apt2.setPatient(patient1);
-        apt2.setDoctor(doctor1);
-        apt2.setAppointmentDate(LocalDateTime.now().minusDays(10));
-        apt2.setStatus(Appointment.Status.COMPLETED);
-        apt2.setNotes("Initial consultation");
-        appointmentRepository.save(apt2);
-
-        Appointment apt3 = new Appointment();
-        apt3.setPatient(patient2);
-        apt3.setDoctor(doctor2);
-        apt3.setAppointmentDate(LocalDateTime.now().plusDays(7));
-        apt3.setStatus(Appointment.Status.PENDING);
-        apt3.setNotes("Insulin dosage adjustment");
-        appointmentRepository.save(apt3);
-
         // ── Prescriptions ──────────────────────────────────────────────────────
         Prescription rx1 = new Prescription();
-        rx1.setPatient(patient1);
-        rx1.setDoctor(doctor1);
-        rx1.setAppointment(apt2);
-        rx1.setMedication("Metformin");
-        rx1.setDosage("500mg twice daily");
+        rx1.setPatient(patient1); rx1.setDoctor(doctor1);
+        rx1.setMedication("Metformin"); rx1.setDosage("500mg twice daily");
         rx1.setInstructions("Take with meals. Monitor blood sugar daily.");
-        rx1.setStartDate(LocalDate.now().minusDays(10));
-        rx1.setEndDate(LocalDate.now().plusDays(80));
+        rx1.setStartDate(LocalDate.now().minusDays(30)); rx1.setEndDate(LocalDate.now().plusDays(60));
         prescriptionRepository.save(rx1);
 
         Prescription rx2 = new Prescription();
-        rx2.setPatient(patient1);
-        rx2.setDoctor(doctor1);
-        rx2.setMedication("Glibenclamide");
-        rx2.setDosage("5mg once daily before breakfast");
+        rx2.setPatient(patient1); rx2.setDoctor(doctor1);
+        rx2.setMedication("Glibenclamide"); rx2.setDosage("5mg once daily before breakfast");
         rx2.setInstructions("Do not skip meals while on this medication.");
-        rx2.setStartDate(LocalDate.now().minusDays(10));
-        rx2.setEndDate(LocalDate.now().plusDays(80));
+        rx2.setStartDate(LocalDate.now().minusDays(30)); rx2.setEndDate(LocalDate.now().plusDays(60));
         prescriptionRepository.save(rx2);
 
         Prescription rx3 = new Prescription();
-        rx3.setPatient(patient2);
-        rx3.setDoctor(doctor2);
-        rx3.setMedication("Insulin Glargine");
-        rx3.setDosage("10 units subcutaneous at bedtime");
+        rx3.setPatient(patient2); rx3.setDoctor(doctor2);
+        rx3.setMedication("Insulin Glargine"); rx3.setDosage("10 units subcutaneous at bedtime");
         rx3.setInstructions("Rotate injection sites. Store insulin in refrigerator.");
         rx3.setStartDate(LocalDate.now().minusDays(30));
         prescriptionRepository.save(rx3);
 
-        // ── Glucose Readings — patient1 (last 10 days) ─────────────────────────
-        List<double[]> readings = List.of(
-                new double[]{8.2, 0}, new double[]{6.1, 1}, new double[]{9.4, 2},
-                new double[]{7.8, 3}, new double[]{6.5, 4}, new double[]{10.1, 5},
-                new double[]{7.2, 6}, new double[]{8.9, 7}, new double[]{6.8, 8},
-                new double[]{7.5, 9}
-        );
-        MealContext[] contexts = {MealContext.FASTING, MealContext.AFTER_MEAL, MealContext.BEFORE_MEAL,
-                MealContext.AFTER_MEAL, MealContext.FASTING, MealContext.AFTER_MEAL,
-                MealContext.BEDTIME, MealContext.AFTER_MEAL, MealContext.FASTING, MealContext.BEFORE_MEAL};
+        Prescription rx4 = new Prescription();
+        rx4.setPatient(patient2); rx4.setDoctor(doctor2);
+        rx4.setMedication("Aspirin"); rx4.setDosage("75mg once daily");
+        rx4.setInstructions("Take after food. Cardiovascular protection.");
+        rx4.setStartDate(LocalDate.now().minusDays(15)); rx4.setEndDate(LocalDate.now().plusDays(90));
+        prescriptionRepository.save(rx4);
 
-        for (int i = 0; i < readings.size(); i++) {
-            GlucoseReading gr = new GlucoseReading();
-            gr.setPatient(patient1);
-            gr.setValue(readings.get(i)[0]);
-            gr.setUnit(Unit.MMOL_L);
-            gr.setMealContext(contexts[i]);
-            gr.setRecordedAt(LocalDateTime.now().minusDays((long) readings.get(i)[1]));
-            glucoseRepository.save(gr);
+        // ── Appointments: today → 20th of current month ────────────────────────
+        LocalDate today = LocalDate.now();
+        LocalDate target = today.withDayOfMonth(20);
+        // If today is past the 20th, target next month's 20th
+        if (today.getDayOfMonth() > 20) target = target.plusMonths(1);
+
+        // Past appointments (last 30 days) — completed
+        String[][] pastApts = {
+            {"Quarterly HbA1c review",         "-28"},
+            {"Blood pressure follow-up",        "-21"},
+            {"Medication adjustment",           "-14"},
+            {"Routine check-up",                "-10"},
+            {"Glucose trend review",            "-7"},
+            {"Initial consultation",            "-5"},
+            {"Insulin dosage review",           "-3"},
+            {"Pre-appointment blood work",      "-1"},
+        };
+        for (String[] a : pastApts) {
+            Appointment apt = new Appointment();
+            apt.setPatient(Integer.parseInt(a[1]) % 2 == 0 ? patient1 : patient2);
+            apt.setDoctor(Integer.parseInt(a[1]) % 3 == 0 ? doctor2 : doctor1);
+            apt.setAppointmentDate(LocalDateTime.of(today.plusDays(Long.parseLong(a[1])), LocalTime.of(9, 0)));
+            apt.setStatus(Appointment.Status.COMPLETED);
+            apt.setNotes(a[0]);
+            appointmentRepository.save(apt);
         }
 
-        // ── Glucose Readings — patient2 ────────────────────────────────────────
-        double[] p2Values = {5.8, 7.2, 6.4, 8.1, 5.5};
-        MealContext[] p2Contexts = {MealContext.FASTING, MealContext.AFTER_MEAL,
-                MealContext.BEFORE_MEAL, MealContext.AFTER_MEAL, MealContext.BEDTIME};
-        for (int i = 0; i < p2Values.length; i++) {
-            GlucoseReading gr = new GlucoseReading();
-            gr.setPatient(patient2);
-            gr.setValue(p2Values[i]);
-            gr.setUnit(Unit.MMOL_L);
-            gr.setMealContext(p2Contexts[i]);
-            gr.setRecordedAt(LocalDateTime.now().minusDays(i));
-            glucoseRepository.save(gr);
+        // Upcoming appointments: today through the 20th
+        int daysUntil20 = (int) java.time.temporal.ChronoUnit.DAYS.between(today, target);
+        String[] upcomingNotes = {
+            "HbA1c quarterly review",
+            "Insulin dosage adjustment",
+            "Dietary counselling session",
+            "Blood pressure monitoring",
+            "Foot examination",
+            "Eye screening referral",
+            "Kidney function follow-up",
+            "Cholesterol review",
+            "Medication compliance check",
+            "Glucose trend analysis",
+            "Weight management review",
+            "Neuropathy screening",
+            "Retinopathy follow-up",
+            "Cardiology referral review",
+            "General diabetes review",
+            "Lab results discussion",
+            "Lifestyle modification plan",
+            "Emergency glucose spike review",
+            "Annual comprehensive review",
+            "Pre-travel health check",
+        };
+        Appointment.Status[] upcomingStatuses = {
+            Appointment.Status.CONFIRMED, Appointment.Status.PENDING, Appointment.Status.CONFIRMED,
+            Appointment.Status.PENDING,   Appointment.Status.CONFIRMED, Appointment.Status.PENDING,
+            Appointment.Status.CONFIRMED, Appointment.Status.PENDING,   Appointment.Status.CONFIRMED,
+            Appointment.Status.PENDING,   Appointment.Status.CONFIRMED, Appointment.Status.PENDING,
+            Appointment.Status.CONFIRMED, Appointment.Status.PENDING,   Appointment.Status.CONFIRMED,
+            Appointment.Status.PENDING,   Appointment.Status.CONFIRMED, Appointment.Status.PENDING,
+            Appointment.Status.CONFIRMED, Appointment.Status.PENDING,
+        };
+        int[] aptHours = {8, 9, 10, 11, 14, 15, 16, 8, 9, 10, 11, 14, 15, 16, 8, 9, 10, 11, 14, 15};
+
+        for (int d = 0; d <= daysUntil20 && d < upcomingNotes.length; d++) {
+            Appointment apt = new Appointment();
+            apt.setPatient(d % 2 == 0 ? patient1 : patient2);
+            apt.setDoctor(d % 3 == 0 ? doctor2 : doctor1);
+            apt.setAppointmentDate(LocalDateTime.of(today.plusDays(d), LocalTime.of(aptHours[d % aptHours.length], 0)));
+            apt.setStatus(upcomingStatuses[d]);
+            apt.setNotes(upcomingNotes[d]);
+            appointmentRepository.save(apt);
         }
 
-        // ── Health Metrics ─────────────────────────────────────────────────────
-        HealthMetrics m1 = new HealthMetrics();
-        m1.setPatient(patient1);
-        m1.setWeight(88.0);
-        m1.setHeight(175.0);
-        m1.setHba1c(8.1);
-        m1.setBloodPressureSystolic(138);
-        m1.setBloodPressureDiastolic(88);
-        m1.setCholesterol(5.2);
-        m1.setRecordedAt(LocalDateTime.now().minusDays(5));
-        metricsRepository.save(m1);
+        // ── Glucose Readings — patient1: 30 days × 3 readings/day ─────────────
+        // Simulates a gradual improvement trend (high → controlled)
+        double[] p1Morning  = {10.2,9.8,9.5,9.1,8.9,8.7,8.4,8.2,8.0,7.9,7.7,7.5,7.4,7.2,7.1,7.0,6.9,6.8,6.7,6.6,6.5,6.4,6.5,6.3,6.4,6.2,6.3,6.1,6.2,6.0};
+        double[] p1Midday   = {12.1,11.8,11.5,11.0,10.8,10.5,10.2,9.9,9.7,9.4,9.2,9.0,8.8,8.6,8.4,8.2,8.0,7.9,7.7,7.6,7.5,7.4,7.3,7.2,7.1,7.0,6.9,6.8,6.7,6.6};
+        double[] p1Evening  = {9.1,8.8,8.6,8.3,8.1,7.9,7.7,7.5,7.4,7.2,7.1,7.0,6.9,6.8,6.7,6.6,6.5,6.4,6.3,6.2,6.1,6.0,6.1,5.9,6.0,5.8,5.9,5.7,5.8,5.6};
+        MealContext[] p1Ctx = {MealContext.FASTING, MealContext.AFTER_MEAL, MealContext.BEDTIME};
 
-        HealthMetrics m2 = new HealthMetrics();
-        m2.setPatient(patient2);
-        m2.setWeight(62.0);
-        m2.setHeight(165.0);
-        m2.setHba1c(7.2);
-        m2.setBloodPressureSystolic(118);
-        m2.setBloodPressureDiastolic(76);
-        m2.setCholesterol(4.1);
-        m2.setRecordedAt(LocalDateTime.now().minusDays(2));
-        metricsRepository.save(m2);
+        for (int day = 0; day < 30; day++) {
+            double[] vals = {p1Morning[day], p1Midday[day], p1Evening[day]};
+            int[] hours = {7, 13, 20};
+            for (int t = 0; t < 3; t++) {
+                GlucoseReading gr = new GlucoseReading();
+                gr.setPatient(patient1);
+                gr.setValue(vals[t]);
+                gr.setUnit(Unit.MMOL_L);
+                gr.setMealContext(p1Ctx[t]);
+                gr.setRecordedAt(LocalDateTime.of(today.minusDays(29 - day), LocalTime.of(hours[t], 0)));
+                glucoseRepository.save(gr);
+            }
+        }
+
+        // ── Glucose Readings — patient2: 30 days × 3 readings/day ─────────────
+        // TYPE_1 — more variable, slight upward drift then stabilise
+        double[] p2Morning = {5.2,5.5,4.9,6.1,5.8,5.3,6.4,5.7,5.1,6.2,5.9,5.4,6.5,5.8,5.2,6.3,5.6,5.0,6.1,5.7,5.3,6.0,5.5,5.1,5.9,5.4,5.0,5.8,5.3,5.1};
+        double[] p2Midday  = {8.1,7.8,8.4,7.5,8.2,7.9,8.6,7.3,8.0,7.7,8.3,7.4,8.1,7.8,8.5,7.2,7.9,8.2,7.6,8.0,7.7,8.3,7.5,7.9,8.1,7.6,8.0,7.8,8.2,7.7};
+        double[] p2Evening = {6.8,7.1,6.5,7.3,6.9,7.2,6.6,7.4,6.8,7.0,6.7,7.3,6.5,7.1,6.9,7.2,6.6,7.0,6.8,7.3,6.7,7.1,6.9,7.2,6.5,7.0,6.8,7.1,6.6,7.0};
+        MealContext[] p2Ctx = {MealContext.FASTING, MealContext.AFTER_MEAL, MealContext.BEFORE_MEAL};
+
+        for (int day = 0; day < 30; day++) {
+            double[] vals = {p2Morning[day], p2Midday[day], p2Evening[day]};
+            int[] hours = {6, 12, 19};
+            for (int t = 0; t < 3; t++) {
+                GlucoseReading gr = new GlucoseReading();
+                gr.setPatient(patient2);
+                gr.setValue(vals[t]);
+                gr.setUnit(Unit.MMOL_L);
+                gr.setMealContext(p2Ctx[t]);
+                gr.setRecordedAt(LocalDateTime.of(today.minusDays(29 - day), LocalTime.of(hours[t], 0)));
+                glucoseRepository.save(gr);
+            }
+        }
+
+        // ── Health Metrics — patient1: every 5 days for 30 days ───────────────
+        double[][] p1Metrics = {
+            // weight, height, hba1c, systolic, diastolic, cholesterol
+            {91.0, 175.0, 8.9, 145, 92, 5.8},
+            {90.5, 175.0, 8.7, 142, 90, 5.7},
+            {90.0, 175.0, 8.4, 140, 89, 5.6},
+            {89.5, 175.0, 8.2, 138, 88, 5.5},
+            {89.0, 175.0, 8.0, 136, 87, 5.4},
+            {88.5, 175.0, 7.8, 134, 86, 5.3},
+        };
+        for (int i = 0; i < p1Metrics.length; i++) {
+            HealthMetrics m = new HealthMetrics();
+            m.setPatient(patient1);
+            m.setWeight(p1Metrics[i][0]);
+            m.setHeight(p1Metrics[i][1]);
+            m.setHba1c(p1Metrics[i][2]);
+            m.setBloodPressureSystolic((int) p1Metrics[i][3]);
+            m.setBloodPressureDiastolic((int) p1Metrics[i][4]);
+            m.setCholesterol(p1Metrics[i][5]);
+            m.setRecordedAt(LocalDateTime.of(today.minusDays(25 - (i * 5)), LocalTime.NOON));
+            metricsRepository.save(m);
+        }
+
+        // ── Health Metrics — patient2: every 5 days for 30 days ───────────────
+        double[][] p2Metrics = {
+            {63.0, 165.0, 7.8, 122, 80, 4.5},
+            {62.8, 165.0, 7.6, 120, 79, 4.4},
+            {62.5, 165.0, 7.4, 119, 78, 4.3},
+            {62.3, 165.0, 7.2, 118, 77, 4.2},
+            {62.0, 165.0, 7.0, 117, 76, 4.1},
+            {61.8, 165.0, 6.8, 116, 75, 4.0},
+        };
+        for (int i = 0; i < p2Metrics.length; i++) {
+            HealthMetrics m = new HealthMetrics();
+            m.setPatient(patient2);
+            m.setWeight(p2Metrics[i][0]);
+            m.setHeight(p2Metrics[i][1]);
+            m.setHba1c(p2Metrics[i][2]);
+            m.setBloodPressureSystolic((int) p2Metrics[i][3]);
+            m.setBloodPressureDiastolic((int) p2Metrics[i][4]);
+            m.setCholesterol(p2Metrics[i][5]);
+            m.setRecordedAt(LocalDateTime.of(today.minusDays(25 - (i * 5)), LocalTime.NOON));
+            metricsRepository.save(m);
+        }
 
         // ── Notifications ──────────────────────────────────────────────────────
-        Notification n1 = new Notification();
-        n1.setRecipient(patientUser);
-        n1.setType(Type.APPOINTMENT_REMINDER);
-        n1.setMessage("Reminder: You have an appointment with Dr. Mugisha in 3 days.");
-        notificationRepository.save(n1);
-
-        Notification n2 = new Notification();
-        n2.setRecipient(patientUser);
-        n2.setType(Type.PRESCRIPTION_ISSUED);
-        n2.setMessage("Dr. Mugisha has issued a new prescription: Metformin 500mg.");
-        notificationRepository.save(n2);
-
-        Notification n3 = new Notification();
-        n3.setRecipient(patientUser2);
-        n3.setType(Type.GENERAL);
-        n3.setMessage("Your HbA1c result is available. Please review with your doctor.");
-        notificationRepository.save(n3);
+        String[][] notifs = {
+            {"APPOINTMENT_REMINDER", "jean",  "Reminder: You have an appointment with Dr. Mugisha tomorrow at 9:00 AM."},
+            {"PRESCRIPTION_ISSUED",  "jean",  "Dr. Mugisha has issued a new prescription: Metformin 500mg."},
+            {"GENERAL",              "jean",  "High glucose alert: Your reading of 10.2 mmol/L is above your target range."},
+            {"GENERAL",              "jean",  "Your HbA1c has improved from 8.9% to 7.8% over the last 30 days. Great progress!"},
+            {"APPOINTMENT_REMINDER", "alice", "Reminder: You have an appointment with Dr. Uwimana in 2 days."},
+            {"PRESCRIPTION_ISSUED",  "alice", "Dr. Uwimana has updated your Insulin Glargine dosage."},
+            {"GENERAL",              "alice", "Your HbA1c result is available. Please review with your doctor."},
+            {"GENERAL",              "alice", "Low glucose alert: Your fasting reading of 4.9 mmol/L is below target."},
+        };
+        User[] notifUsers = {patientUser, patientUser, patientUser, patientUser,
+                             patientUser2, patientUser2, patientUser2, patientUser2};
+        for (int i = 0; i < notifs.length; i++) {
+            Notification n = new Notification();
+            n.setRecipient(notifUsers[i]);
+            n.setType(Type.valueOf(notifs[i][0]));
+            n.setMessage(notifs[i][2]);
+            notificationRepository.save(n);
+        }
 
         System.out.println(">>> Seeding complete.");
         System.out.println(">>> Swagger UI: http://localhost:8085/swagger-ui.html");

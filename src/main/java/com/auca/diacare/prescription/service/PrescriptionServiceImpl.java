@@ -43,6 +43,11 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     }
 
     @Override
+    public List<Prescription> getAllPrescriptions() {
+        return prescriptionRepository.findAll();
+    }
+
+    @Override
     public Prescription updatePrescription(Long id, Prescription details) {
         Prescription prescription = prescriptionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prescription not found"));

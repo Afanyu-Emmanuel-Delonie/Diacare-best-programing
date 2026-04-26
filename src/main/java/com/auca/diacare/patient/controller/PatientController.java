@@ -1,6 +1,5 @@
 package com.auca.diacare.patient.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.auca.diacare.patient.dto.PatientDTO;
@@ -27,8 +27,11 @@ import jakarta.validation.Valid;
 @SecurityRequirement(name = "bearerAuth")
 public class PatientController {
 
-    @Autowired
-    private PatientService patientService;
+    private final PatientService patientService;
+
+    public PatientController(PatientService patientService) {
+        this.patientService = patientService;
+    }
 
     @Operation(summary = "Create patient profile")
     @PostMapping
@@ -60,6 +63,12 @@ public class PatientController {
         return patientService.getPatientByPublicId(publicId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "List all patients")
+    @GetMapping("/all")
+    public ResponseEntity<List<Patient>> getAllPatients() {
+        return ResponseEntity.ok(patientService.getAllPatients());
     }
 
     @Operation(summary = "Update patient profile")

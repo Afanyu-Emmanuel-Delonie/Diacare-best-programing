@@ -1,7 +1,7 @@
 package com.auca.diacare.appointment.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +18,7 @@ import com.auca.diacare.appointment.dto.AppointmentDTO;
 import com.auca.diacare.appointment.model.Appointment;
 import com.auca.diacare.appointment.model.Appointment.Status;
 import com.auca.diacare.appointment.service.AppointmentService;
+import com.auca.diacare.auth.repository.UserRepository;
 import com.auca.diacare.doctor.model.Doctor;
 import com.auca.diacare.doctor.repository.DoctorRepository;
 import com.auca.diacare.patient.model.Patient;
@@ -37,20 +38,30 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final UserRepository userRepository;
 
     public AppointmentController(AppointmentService appointmentService,
             PatientRepository patientRepository,
-            DoctorRepository doctorRepository) {
+            DoctorRepository doctorRepository,
+            UserRepository userRepository) {
         this.appointmentService = appointmentService;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
+        this.userRepository = userRepository;
     }
 
-    @Operation(summary = "Book an appointment")
+    @Operation(summary = "Book an appointment (weekdays only, 9AM–6PM)")
     @PostMapping
-    public ResponseEntity<Appointment> create(@Valid @RequestBody AppointmentDTO dto) {
-        Patient patient = patientRepository.findByUser_PublicId(dto.getPatientPublicId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+    public ResponseEntity<Appointment> create(@Valid @RequestBody AppointmentDTO dto,
+            Authentication authentication) {
+        // Resolve patient from the authenticated user
+        Patient patient = patientRepository.findByUserEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Patient profile not found"));
+
+        // Resolve doctor from provided publicId (required)
+        if (dto.getDoctorPublicId() == null) {
+            throw new RuntimeException("Please select a doctor");
+        }
         Doctor doctor = doctorRepository.findByUser_PublicId(dto.getDoctorPublicId())
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
@@ -71,20 +82,32 @@ public class AppointmentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Get my appointments", description = "Returns appointments for the authenticated patient or doctor")
+    @Operation(summary = "Get my appointments")
     @GetMapping("/my")
     public ResponseEntity<List<Appointment>> getMyAppointments(Authentication authentication) {
         String email = authentication.getName();
-        // returns appointments whether the caller is a patient or doctor
         List<Appointment> asPatient = appointmentService.getAppointmentsByPatientEmail(email);
-        if (!asPatient.isEmpty()) return ResponseEntity.ok(asPatient);
+        if (!asPatient.isEmpty())
+            return ResponseEntity.ok(asPatient);
         return ResponseEntity.ok(appointmentService.getAppointmentsByDoctorEmail(email));
     }
 
-    @Operation(summary = "Update appointment status", description = "Status values: PENDING, CONFIRMED, CANCELLED, COMPLETED")
+    @Operation(summary = "Get all appointments (doctor/admin)")
+    @GetMapping("/all")
+    public ResponseEntity<List<Appointment>> getAll() {
+        return ResponseEntity.ok(appointmentService.getAllAppointments());
+    }
+
+    @Operation(summary = "Update appointment status", description = "Values: PENDING, CONFIRMED, CANCELLED, COMPLETED")
     @PutMapping("/{id}/status")
     public ResponseEntity<Appointment> updateStatus(@PathVariable Long id, @RequestBody Status status) {
         return ResponseEntity.ok(appointmentService.updateStatus(id, status));
+    }
+
+    @Operation(summary = "Reschedule an appointment (weekdays only, 9AM–6PM)")
+    @PutMapping("/{id}/reschedule")
+    public ResponseEntity<Appointment> reschedule(@PathVariable Long id, @RequestBody LocalDateTime newDate) {
+        return ResponseEntity.ok(appointmentService.reschedule(id, newDate));
     }
 
     @Operation(summary = "Cancel appointment")

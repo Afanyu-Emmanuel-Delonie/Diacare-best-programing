@@ -3,14 +3,14 @@ package com.auca.diacare.auth.dto;
 import com.auca.diacare.auth.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 // import lombok.Data;
 
 // @Data
 public class RegisterRequest {
 
-    @NotBlank(message = "Username is required")
-    private String username;
+    // Frontend sends "name" — mapped to username
+    @NotBlank(message = "Name is required")
+    private String name;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
@@ -19,39 +19,36 @@ public class RegisterRequest {
     @NotBlank(message = "Password is required")
     private String password;
 
-    @NotNull(message = "Role is required")
+    // Optional — defaults to PATIENT. Set to DOCTOR if is_doctor=true
     private Role role;
 
-    // Getters and Setters
-    public String getUsername() {
-        return username;
-    }
+    // Doctor-specific fields (optional)
+    private boolean is_doctor;
+    private String license_number;
+    private String specialization;
+    private String hospital;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getPassword() {
-        return password;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public boolean isIs_doctor() { return is_doctor; }
+    public void setIs_doctor(boolean is_doctor) { this.is_doctor = is_doctor; }
 
-    public Role getRole() {
-        return role;
-    }
+    public String getLicense_number() { return license_number; }
+    public void setLicense_number(String license_number) { this.license_number = license_number; }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
+    public String getSpecialization() { return specialization; }
+    public void setSpecialization(String specialization) { this.specialization = specialization; }
+
+    public String getHospital() { return hospital; }
+    public void setHospital(String hospital) { this.hospital = hospital; }
 }

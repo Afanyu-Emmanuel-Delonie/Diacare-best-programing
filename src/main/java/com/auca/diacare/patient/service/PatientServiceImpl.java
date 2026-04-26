@@ -1,5 +1,6 @@
 package com.auca.diacare.patient.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,10 +45,14 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientRepository.findByUser_PublicId(publicId)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
-        patient.setDiabetesType(patientDetails.getDiabetesType());
-        patient.setDateOfBirth(patientDetails.getDateOfBirth());
-        patient.setGender(patientDetails.getGender());
-        patient.setTargetHbA1c(patientDetails.getTargetHbA1c());
+        if (patientDetails.getDiabetesType() != null)
+            patient.setDiabetesType(patientDetails.getDiabetesType());
+        if (patientDetails.getDateOfBirth() != null)
+            patient.setDateOfBirth(patientDetails.getDateOfBirth());
+        if (patientDetails.getGender() != null)
+            patient.setGender(patientDetails.getGender());
+        if (patientDetails.getTargetHbA1c() != null)
+            patient.setTargetHbA1c(patientDetails.getTargetHbA1c());
 
         return patientRepository.save(patient);
     }
@@ -57,5 +62,10 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientRepository.findByUser_PublicId(publicId)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
         patientRepository.delete(patient);
+    }
+
+    @Override
+    public List<Patient> getAllPatients() {
+        return patientRepository.findAll();
     }
 }

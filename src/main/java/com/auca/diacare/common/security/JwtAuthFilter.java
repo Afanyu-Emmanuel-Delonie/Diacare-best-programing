@@ -28,7 +28,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/v1/auth/");
+        return path.startsWith("/api/v1/auth/")
+                || "OPTIONS".equalsIgnoreCase(request.getMethod());
     }
 
     @Override
@@ -39,14 +40,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             return;
         }
 
         String token = authHeader.substring(7);
 
         if (!jwtUtil.isTokenValid(token)) {
-            filterChain.doFilter(request, response);
+            writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
             return;
         }
 
@@ -63,5 +64,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void writeJsonError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"status\":" + status + ",\"error\":\""
+                + (status == 401 ? "Unauthorized" : "Forbidden") + "\",\"message\":\"" + message + "\"}");
     }
 }

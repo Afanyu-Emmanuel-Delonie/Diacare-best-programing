@@ -88,8 +88,15 @@ public class PrescriptionController {
     public ResponseEntity<List<Prescription>> getMyPrescriptions(Authentication authentication) {
         String email = authentication.getName();
         List<Prescription> asPatient = prescriptionService.getPrescriptionsByPatientEmail(email);
-        if (!asPatient.isEmpty()) return ResponseEntity.ok(asPatient);
+        if (!asPatient.isEmpty())
+            return ResponseEntity.ok(asPatient);
         return ResponseEntity.ok(prescriptionService.getPrescriptionsByDoctorEmail(email));
+    }
+
+    @Operation(summary = "Get all prescriptions (doctor/admin)")
+    @GetMapping("/all")
+    public ResponseEntity<List<Prescription>> getAll() {
+        return ResponseEntity.ok(prescriptionService.getAllPrescriptions());
     }
 
     @Operation(summary = "Get prescriptions by appointment")
