@@ -2,6 +2,21 @@
 
 This manual explains the DiaCare project in simple terms so students can understand what it does, how it is organized, and how to run it.
 
+## Reference Organization
+
+The reference organization for this project is Rwanda Diabetics Association. In simple terms, DiaCare is presented as a prototype system that such an organization could use to support diabetes care coordination, patient monitoring, doctor communication, and emergency follow-up.
+
+The full project README includes the main diagrams needed for submission:
+
+- architecture diagram
+- component diagram
+- use case diagram
+- class diagram
+- entity relationship diagram
+- sequence diagram
+- activity diagram
+- deployment diagram
+
 ## What DiaCare Is
 
 DiaCare is a diabetes care management system. It helps different users manage health information in one place.

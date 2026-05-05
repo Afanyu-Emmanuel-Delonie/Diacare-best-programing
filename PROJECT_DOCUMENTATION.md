@@ -2,6 +2,25 @@
 
 This document summarizes the Dockerization process, the version control setup, and a software test plan for the DiaCare application.
 
+## Reference Organization
+
+The reference organization for this project is Rwanda Diabetics Association. DiaCare is designed as a prototype digital diabetes care platform that can support an organization responsible for diabetes awareness, patient follow-up, doctor coordination, appointment support, and emergency communication. The features in this system are therefore aligned with the needs of patients living with diabetes, healthcare professionals, and administrative staff who coordinate care.
+
+### Organizational Context
+
+Rwanda Diabetics Association can use a system like DiaCare to:
+
+- register and manage patients, doctors, and administrative users
+- help patients monitor glucose readings and health metrics
+- support doctor follow-up through appointments, prescriptions, and meal plans
+- improve communication between patients and care teams
+- provide an SOS escalation path for urgent patient messages
+- keep records that can support reporting and decision-making
+
+### Documentation And Diagram Location
+
+The root `README.md` contains the submission-ready diagrams for this project, including architecture, component, use case, class, entity relationship, backend layer, sequence, activity, and deployment diagrams. These diagrams are written in Mermaid syntax so they render directly on GitHub and in many Markdown viewers.
+
 ## PHASE 2. Software Development Prototype
 
 The DiaCare prototype is an early working version of a diabetes care management system built to validate the main idea before full deployment. The prototype focuses on the core workflows that matter most:
