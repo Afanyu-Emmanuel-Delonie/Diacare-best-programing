@@ -8,9 +8,9 @@ DiaCare is a diabetes care management system. It helps different users manage he
 
 ### Main User Roles
 
-- Patient: records glucose readings, books appointments, and views prescriptions or meal plans
-- Doctor: reviews patient data and manages care
-- Admin: manages users, reports, and system records
+- Patient: records glucose readings, books appointments, views prescriptions or meal plans, and chats with their doctor or administration
+- Doctor: reviews patient data, manages care, and communicates with patients and admin through chat
+- Admin: manages users, reports, system records, and handles patient complaints and SOS emergencies through chat
 
 ## Main Features
 
@@ -22,6 +22,8 @@ DiaCare is a diabetes care management system. It helps different users manage he
 - meal plan viewing
 - notifications
 - dashboards for each user role
+- real-time chat between doctors, patients, and admin
+- SOS emergency messaging with instant admin alerts
 
 ## Project Structure
 
@@ -42,8 +44,11 @@ It shows that:
 - data can be saved and read from the database
 - different roles can access different features
 - the frontend and backend can work together
+- users can communicate in real time through chat
 
-## Design Pattern Used
+## Design Patterns Used
+
+### Repository Pattern
 
 The project mainly uses the `Repository Pattern`.
 
@@ -55,6 +60,10 @@ This means:
 
 This keeps the code clean and easier to maintain.
 
+### Observer Pattern
+
+The real-time chat uses an observer-style approach through WebSocket messaging. When a user sends a message, the server immediately pushes it to the recipient without the recipient needing to refresh the page. This is similar to how WhatsApp delivers messages instantly.
+
 ## Software Best Practices Used
 
 - code is organized into layers
@@ -63,6 +72,39 @@ This keeps the code clean and easier to maintain.
 - errors are handled consistently
 - API calls are centralized in one client file
 - the frontend is built as reusable components
+- response DTOs are used to safely transfer data between the backend and frontend without exposing database internals
+
+## Real-Time Chat Module
+
+### What it does
+
+The chat module allows any two users with different roles to message each other in real time. Messages are stored in the database so history is preserved when the page is refreshed.
+
+### How conversations work
+
+A conversation is a private thread between exactly two users. To start a new conversation, a user clicks the pencil icon in the Chats header and picks a person from a searchable list. The list only shows users with a different role, so patients see doctors and admins, doctors see patients and admins, and admins see everyone.
+
+### Unread badges
+
+A red badge appears on the Chat item in the sidebar navigation showing how many unread messages the user has. Inside the chat page, each conversation row also shows its own unread count. The badge clears automatically when the conversation is opened.
+
+### Read receipts
+
+Each sent message shows a tick icon in the bottom corner:
+
+- a single grey tick means the message was sent
+- a double blue tick means the recipient has read it
+
+### SOS Emergency Messaging
+
+Patients can flag a message as an SOS emergency by tapping the red triangle button in the input bar before sending. When this happens:
+
+1. The message bubble turns red and shows an SOS label.
+2. The admin receives an instant alert at the top of their chat page showing the patient name and message.
+3. If no admin acknowledges the alert within five minutes, the system automatically re-sends the alert.
+4. Doctors and admins can click Acknowledge on the message to confirm they have seen it. The label then changes to a green confirmed state.
+
+This feature is designed so that patients in urgent situations can get help quickly even if their doctor is not immediately available.
 
 ## How To Run The Project With Docker
 
@@ -115,6 +157,9 @@ The software test plan checks whether the system works correctly before submissi
 - appointments
 - prescriptions and meal plans
 - notifications
+- real-time chat message delivery
+- SOS emergency alerts and acknowledgement
+- unread message badge counts
 - Docker deployment
 
 ### Example test steps
@@ -123,16 +168,21 @@ The software test plan checks whether the system works correctly before submissi
 2. Register or log in a user.
 3. Open protected screens.
 4. Add and view health data.
-5. Confirm the correct data is returned.
+5. Open the Chat page and start a conversation with another user.
+6. Send a message and confirm it appears instantly on the other side without refreshing.
+7. Send an SOS message as a patient and confirm the admin sees the alert.
+8. Acknowledge the SOS and confirm the label updates.
+9. Confirm the unread badge clears when the conversation is opened.
 
 ### Expected result
 
-The system should run without errors, protect restricted pages, and save/retrieve data correctly.
+The system should run without errors, protect restricted pages, save and retrieve data correctly, and deliver messages in real time.
 
 ## Quick Student Checklist
 
 - Read the prototype section first.
-- Learn the repository pattern used in the backend.
+- Learn the repository pattern and observer pattern used in the backend.
 - Review the Docker setup and run the project.
+- Test the chat feature between two different browser sessions logged in as different users.
 - Use the test plan to verify the application.
 - Include both documents in your submission.

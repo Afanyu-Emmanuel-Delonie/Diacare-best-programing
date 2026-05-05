@@ -13,6 +13,7 @@ The DiaCare prototype is an early working version of a diabetes care management 
 - prescriptions and meal plans
 - notifications
 - dashboards and reports
+- real-time chat with emergency (SOS) escalation
 
 ### Prototype Purpose
 
@@ -39,8 +40,11 @@ The implementation follows common Java and React best practices:
 - environment-based configuration instead of hardcoding secrets
 - component-based frontend design
 - API communication through a single axios client
+- response DTOs used at the service boundary to prevent lazy-loading serialization errors
 
-### Design Pattern Used
+### Design Patterns Used
+
+#### Repository Pattern
 
 The main design pattern used in the project is the `Repository Pattern`.
 
@@ -55,20 +59,171 @@ This pattern appears throughout the backend through interfaces such as:
 - `NotificationRepository`
 - `HealthMetricsRepository`
 - `GlucoseReadingRepository`
+- `ConversationRepository`
+- `ChatMessageRepository`
 
-#### How the pattern is used
+Controllers call services. Services call repositories. Repositories handle database access through Spring Data JPA. This keeps database logic separate from business logic and makes the application easier to maintain and test.
 
-- Controllers call services.
-- Services call repositories.
-- Repositories handle database access through Spring Data JPA.
+#### Observer Pattern (WebSocket Messaging)
 
-This keeps database logic separate from business logic and makes the application easier to maintain and test.
+The real-time chat module uses an observer-style pattern through Spring's STOMP message broker. When a message is sent, the server pushes it to all subscribed clients without them needing to poll. The `SimpMessagingTemplate` acts as the publisher and each connected browser session acts as a subscriber on `/user/queue/messages`.
 
 ### Why This Prototype Is Useful
 
 - It proves the system can support the intended users and features.
 - It reduces risk before full-scale deployment.
 - It gives a solid foundation for testing, Dockerization, and future improvement.
+
+---
+
+## PHASE 3. Real-Time Chat Module
+
+### Overview
+
+A real-time messaging module was added to support communication between all user roles:
+
+- Doctor ↔ Patient
+- Doctor ↔ Admin
+- Patient ↔ Admin (for complaints and support requests)
+
+Patients can flag any message as an SOS emergency. Admins are notified immediately via WebSocket and again by a scheduled escalation job if the emergency is not acknowledged within five minutes.
+
+### Backend Implementation
+
+#### New Module Structure
+
+```
+chat/
+├── controller/  ChatController.java
+├── dto/         ChatMessageDTO.java
+│                ChatMessageResponse.java
+│                ConversationDTO.java
+│                ConversationResponse.java
+├── model/       ChatMessage.java
+│                Conversation.java
+├── repository/  ChatMessageRepository.java
+│                ConversationRepository.java
+└── service/     ChatService.java
+                 ChatServiceImpl.java
+                 EmergencyEscalationScheduler.java
+```
+
+`common/config/WebSocketConfig.java` was added to configure the STOMP broker and SockJS endpoint.
+
+#### Data Model
+
+**Conversation** links two `User` records as `participantOne` and `participantTwo`. A unique constraint on the pair prevents duplicate conversations between the same two users.
+
+**ChatMessage** belongs to a `Conversation` and records:
+
+| Field | Purpose |
+|---|---|
+| `content` | Message text |
+| `sender` | The user who sent it |
+| `isRead` | Whether the recipient has read it |
+| `isEmergency` | Whether the patient flagged it as SOS |
+| `emergencyAcknowledged` | Whether a doctor or admin acknowledged the SOS |
+| `sentAt` | Timestamp set on persist |
+
+#### REST Endpoints
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/chat/users` | List users available to chat with (filtered by role) |
+| POST | `/api/v1/chat/conversations` | Get or create a conversation with another user |
+| GET | `/api/v1/chat/conversations` | List all conversations for the current user |
+| GET | `/api/v1/chat/conversations/{id}/messages` | Load message history |
+| PUT | `/api/v1/chat/conversations/{id}/read` | Mark all messages as read |
+| GET | `/api/v1/chat/unread/count` | Total unread count for nav badge |
+| POST | `/api/v1/chat/unread/per-conversation` | Unread count per conversation |
+| PUT | `/api/v1/chat/messages/{id}/acknowledge-emergency` | Acknowledge an SOS message |
+| GET | `/api/v1/chat/emergencies` | List all unacknowledged SOS messages |
+
+#### WebSocket
+
+- Endpoint: `/ws` (SockJS fallback enabled)
+- JWT is passed as a query parameter on the handshake: `/ws?token=<jwt>`
+- Client sends messages to `/app/chat.send`
+- Server pushes to `/user/{email}/queue/messages`
+- Admin emergency alerts pushed to `/user/{email}/queue/emergency-alert`
+
+#### Emergency Escalation Scheduler
+
+`EmergencyEscalationScheduler` runs every 60 seconds. It finds SOS messages older than five minutes that have not been acknowledged and re-pushes an alert to all active admin users via WebSocket. This ensures no emergency is silently missed if the admin was offline when the message was first sent.
+
+#### DTO Layer
+
+All service methods return `ChatMessageResponse` or `ConversationResponse` DTOs instead of JPA entities. This prevents `LazyInitializationException` errors when Jackson serializes the response after the JPA session has closed (`open-in-view=false`). All lazy associations are resolved inside the `@Transactional` service method before the session closes.
+
+#### Security Changes
+
+- `/ws/**` is whitelisted in `SecurityConfig` so the WebSocket handshake is not blocked by the JWT filter.
+- `JwtAuthFilter` skips `/ws/**` paths.
+- `/api/v1/chat/**` requires any authenticated role (PATIENT, DOCTOR, or ADMIN).
+
+#### Dependency Added
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+</dependency>
+```
+
+### Frontend Implementation
+
+#### New Files
+
+| File | Purpose |
+|---|---|
+| `src/api/chat.js` | All chat REST API calls |
+| `src/hooks/useChatUnread.js` | Hook that polls total unread count every 30 seconds |
+| `src/components/chat/ChatPage.jsx` | Shared layout used by all three role chat pages |
+| `src/components/chat/ChatWindow.jsx` | Real-time message UI with STOMP WebSocket |
+| `src/components/chat/ConversationList.jsx` | Sidebar with conversation list and unread badges |
+| `src/components/chat/NewChatModal.jsx` | Searchable modal to start a new conversation |
+| `src/pages/admin/Chat.jsx` | Admin chat page |
+| `src/pages/doctor/Chat.jsx` | Doctor chat page |
+| `src/pages/patient/Chat.jsx` | Patient chat page with SOS hint banner |
+
+#### npm Packages Added
+
+```
+@stomp/stompjs
+sockjs-client
+```
+
+`vite.config.js` was updated with `define: { global: 'globalThis' }` to polyfill the Node.js `global` variable that `sockjs-client` expects, and `optimizeDeps.include` was set to pre-bundle both packages.
+
+#### UX Design
+
+The chat UI follows a WhatsApp-style layout:
+
+- Left panel: conversation list with last message preview, timestamp, and unread count badge per conversation
+- Right panel: message thread with date separators, message bubbles (green for sent, white for received), read receipts (single tick = sent, double blue tick = read), and a growing textarea input
+- New chat button (pencil icon) is placed in the conversation list header — not as a floating action button over the message area
+- Clicking the pencil opens a modal with a searchable list of all users the current user can chat with, grouped by role
+- On mobile, only one panel is visible at a time. Selecting a conversation switches to the chat view. A back arrow in the chat header returns to the conversation list
+
+#### SOS Emergency Flow
+
+1. Patient taps the red triangle button in the input bar to toggle SOS mode.
+2. The input bar turns red and the placeholder changes to indicate an emergency message.
+3. On send, the message is stored with `isEmergency = true`.
+4. The server immediately pushes a WebSocket alert to all active admin users on `/user/queue/emergency-alert`.
+5. The admin sees a pulsing red banner at the top of their chat page with the patient name, message preview, and two buttons: Open Chat and Acknowledge.
+6. If no admin acknowledges within five minutes, the scheduler re-sends the alert.
+7. Doctors and admins see an SOS label above the red bubble and an Acknowledge button. Once acknowledged, the label changes to a green checkmark.
+
+#### Unread Badges
+
+- Each sidebar (Admin, Doctor, Patient) shows a red badge on the Chat nav item with the total unread count.
+- The badge appears on the icon when the sidebar is collapsed and as a pill on the right when expanded.
+- Inside the chat page, the conversation list header shows the total unread count next to the Chats title.
+- Each conversation row shows its own unread count badge.
+- Counts are polled every 30 seconds via `useChatUnread` and cleared immediately when a conversation is opened.
+
+---
 
 ## 1. Brief Process To Dockerize An Application
 
@@ -122,6 +277,8 @@ After startup:
 - Open the frontend at `http://localhost:5173`
 - Swagger UI is available at `http://localhost:8085/swagger-ui.html`
 
+---
+
 ## 2. Version Control System Setup
 
 This project is managed with Git, which is a distributed version control system. Git keeps track of code changes, makes collaboration easier, and allows the project to be restored to earlier versions when needed.
@@ -165,13 +322,13 @@ Large generated or machine-specific files should be ignored, including:
 5. Push the repository to a remote server such as GitHub or GitLab.
 6. Continue working with feature branches for future improvements.
 
-If your lecturer specifically expects SVN terminology, the same idea still applies: source files, configuration, and documentation are versioned, while generated files are excluded.
+---
 
 ## 3. Software Test Plan
 
 ### 3.1 Test Plan Objective
 
-The purpose of the test plan is to verify that DiaCare behaves correctly across authentication, patient management, doctor workflows, glucose tracking, appointments, prescriptions, notifications, and deployment in Docker containers.
+The purpose of the test plan is to verify that DiaCare behaves correctly across authentication, patient management, doctor workflows, glucose tracking, appointments, prescriptions, notifications, real-time chat, and deployment in Docker containers.
 
 ### 3.2 Test Items
 
@@ -182,6 +339,9 @@ The purpose of the test plan is to verify that DiaCare behaves correctly across 
 - Appointment booking, rescheduling, and cancellation
 - Prescription and meal-plan retrieval
 - Notification creation and retrieval
+- Real-time chat between all user roles
+- SOS emergency flagging and admin acknowledgement
+- Unread message badge counts
 - Docker deployment and service startup
 
 ### 3.3 Test Strategy
@@ -195,10 +355,12 @@ The system should be tested at three levels:
 2. Integration testing
    - Verify controller-to-database flows.
    - Confirm secured endpoints respect roles and JWT authentication.
+   - Verify WebSocket connections authenticate correctly via JWT query parameter.
 
 3. System and acceptance testing
    - Test the complete web application from the user interface.
    - Confirm the deployed Docker stack works end to end.
+   - Test real-time message delivery between two browser sessions.
 
 ### 3.4 Test Environment
 
@@ -206,6 +368,7 @@ The system should be tested at three levels:
 - Frontend: React 19 with Vite
 - Database: PostgreSQL
 - Container platform: Docker and Docker Compose
+- WebSocket: STOMP over SockJS
 
 ### 3.5 Entry Criteria
 
@@ -214,6 +377,7 @@ Testing should start when:
 - the application builds successfully
 - database connection settings are available
 - the frontend can reach the backend API
+- the WebSocket endpoint `/ws` is reachable
 
 ### 3.6 Exit Criteria
 
@@ -222,6 +386,8 @@ Testing is complete when:
 - critical endpoints work as expected
 - login and role-based access pass
 - main user workflows succeed
+- real-time messages are delivered without page refresh
+- SOS alerts reach admin in real time
 - no blocking deployment errors remain
 
 ### 3.7 Sample Test Cases
@@ -240,6 +406,16 @@ Testing is complete when:
 | TC-10 | View prescriptions and meal plans | Records are loaded for the authenticated user |
 | TC-11 | Send and view notifications | Notification is stored and can be retrieved |
 | TC-12 | Start the app with Docker Compose | Backend, frontend, and database all start correctly |
+| TC-13 | Patient starts a chat with a doctor | Conversation is created and both users can see it |
+| TC-14 | Send a message in a conversation | Message appears in real time without page refresh |
+| TC-15 | Receive a message from another user | Message appears in real time without page refresh |
+| TC-16 | Open a conversation with unread messages | Unread badge clears and messages are marked as read |
+| TC-17 | Patient sends an SOS emergency message | Red bubble appears, admin receives instant WebSocket alert |
+| TC-18 | Admin acknowledges an SOS message | SOS label changes to green acknowledged state |
+| TC-19 | SOS message not acknowledged for 5 minutes | Scheduler re-sends alert to all admins |
+| TC-20 | Unread badge on Chat nav item | Badge shows correct count and clears when chat is opened |
+| TC-21 | New chat modal search | Filtering by name or role shows correct users |
+| TC-22 | Chat on mobile screen | List and chat panels switch correctly with back button |
 
 ### 3.8 Recommended Test Execution
 
@@ -247,7 +423,7 @@ Run the following checks:
 
 ```bash
 cd DiaCare
-mvn test
+mvn clean test
 
 cd ../DiaCareFrontend
 npm run build

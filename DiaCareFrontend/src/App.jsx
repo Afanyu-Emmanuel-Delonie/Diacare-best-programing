@@ -21,6 +21,7 @@ import LabResults   from './pages/admin/LabResults'
 import Appointments from './pages/admin/Appointments'
 import Reports      from './pages/admin/Reports'
 import Settings     from './pages/admin/Settings'
+import AdminChat    from './pages/admin/Chat'
 
 // Doctor
 import DoctorLayout       from './layout/DoctorLayout'
@@ -30,6 +31,7 @@ import DoctorGlucoseLog   from './pages/doctor/GlucoseLog'
 import DoctorAppointments from './pages/doctor/Appointments'
 import DoctorLabResults   from './pages/doctor/LabResults'
 import PatientCare        from './pages/doctor/PatientCare'
+import DoctorChat         from './pages/doctor/Chat'
 
 // Patient
 import PatientLayout        from './layout/PatientLayout'
@@ -40,6 +42,7 @@ import PatientPrescriptions from './pages/patient/Prescriptions'
 import PatientMealPlans     from './pages/patient/MealPlans'
 import PatientLabResults    from './pages/patient/LabResults'
 import PatientSettings      from './pages/patient/Settings'
+import PatientChat          from './pages/patient/Chat'
 
 export default function App() {
   const [loading, setLoading] = useState(true)
@@ -68,6 +71,7 @@ export default function App() {
           <Route path="/reports"      element={<Reports />} />
           <Route path="/lab"          element={<LabResults />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/chat"         element={<AdminChat />} />
           <Route path="/settings"     element={<Settings />} />
         </Route>
 
@@ -80,6 +84,7 @@ export default function App() {
           <Route path="appointments" element={<DoctorAppointments />} />
           <Route path="patient-care" element={<PatientCare />} />
           <Route path="lab"          element={<DoctorLabResults />} />
+          <Route path="chat"         element={<DoctorChat />} />
           <Route path="settings"     element={<Settings />} />
         </Route>
 
@@ -92,6 +97,7 @@ export default function App() {
           <Route path="prescriptions" element={<PatientPrescriptions />} />
           <Route path="meal-plans"    element={<PatientMealPlans />} />
           <Route path="lab"           element={<PatientLabResults />} />
+          <Route path="chat"          element={<PatientChat />} />
           <Route path="settings"      element={<PatientSettings />} />
         </Route>
 
