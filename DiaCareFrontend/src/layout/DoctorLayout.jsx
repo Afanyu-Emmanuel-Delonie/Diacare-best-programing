@@ -4,14 +4,24 @@ import { Menu, Bell, ChevronDown, LogOut, User, Settings, Check } from 'lucide-r
 import { authStore } from '../store/authStore'
 import { DOCTOR_NAV, DOCTOR_PAGE_TITLES } from '../constants/doctorNav'
 import Logo from '../components/ui/Logo'
+<<<<<<< HEAD
+=======
+import { useChatUnread } from '../hooks/useChatUnread'
+>>>>>>> 1729564dac2176c3a5655aceb9823bf29bd8e4f9
 
 const MOBILE_BP = 768
 const TABLET_BP = 1024
 
 // ── Sidebar ────────────────────────────────────────────────────────────────
 function DoctorSidebar({ collapsed, onNavClick }) {
+<<<<<<< HEAD
   const navigate = useNavigate()
   const signOut  = () => { authStore.clear(); navigate('/login') }
+=======
+  const navigate   = useNavigate()
+  const signOut    = () => { authStore.clear(); navigate('/login') }
+  const chatUnread = useChatUnread()
+>>>>>>> 1729564dac2176c3a5655aceb9823bf29bd8e4f9
 
   return (
     <aside
@@ -50,8 +60,25 @@ function DoctorSidebar({ collapsed, onNavClick }) {
               height: 'var(--nav-item-h)',
             })}
           >
+<<<<<<< HEAD
             <span className="shrink-0">{item.icon}</span>
             {!collapsed && <span>{item.label}</span>}
+=======
+            <span className="shrink-0 relative">
+              {item.icon}
+              {item.href === '/doctor/chat' && chatUnread > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {chatUnread > 99 ? '99+' : chatUnread}
+                </span>
+              )}
+            </span>
+            {!collapsed && <span className="flex-1">{item.label}</span>}
+            {!collapsed && item.href === '/doctor/chat' && chatUnread > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                {chatUnread > 99 ? '99+' : chatUnread}
+              </span>
+            )}
+>>>>>>> 1729564dac2176c3a5655aceb9823bf29bd8e4f9
           </NavLink>
         ))}
       </nav>

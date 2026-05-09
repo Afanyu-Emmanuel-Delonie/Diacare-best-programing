@@ -1,6 +1,16 @@
+<<<<<<< HEAD
 target/
 .idea/
 .vscode/
 *.log
 .env
 .env.*
+=======
+target
+.idea
+.vscode
+*.log
+.env
+.env.*
+**/node_modules
+>>>>>>> 1729564dac2176c3a5655aceb9823bf29bd8e4f9

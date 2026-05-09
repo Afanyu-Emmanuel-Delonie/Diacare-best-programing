@@ -3,9 +3,17 @@ import { LogOut } from 'lucide-react'
 import { ADMIN_NAV } from '../../constants/nav'
 import Logo from './Logo'
 import { useSignOut } from '../../utils/useSignOut'
+<<<<<<< HEAD
 
 export default function Sidebar({ collapsed, onNavClick }) {
   const signOut = useSignOut()
+=======
+import { useChatUnread } from '../../hooks/useChatUnread'
+
+export default function Sidebar({ collapsed, onNavClick }) {
+  const signOut    = useSignOut()
+  const chatUnread = useChatUnread()
+>>>>>>> 1729564dac2176c3a5655aceb9823bf29bd8e4f9
 
   return (
     <aside
@@ -44,8 +52,25 @@ export default function Sidebar({ collapsed, onNavClick }) {
               height: 'var(--nav-item-h)',
             })}
           >
+<<<<<<< HEAD
             <span className="shrink-0">{item.icon}</span>
             {!collapsed && <span>{item.label}</span>}
+=======
+            <span className="shrink-0 relative">
+              {item.icon}
+              {item.href === '/chat' && chatUnread > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {chatUnread > 99 ? '99+' : chatUnread}
+                </span>
+              )}
+            </span>
+            {!collapsed && <span className="flex-1">{item.label}</span>}
+            {!collapsed && item.href === '/chat' && chatUnread > 0 && (
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                {chatUnread > 99 ? '99+' : chatUnread}
+              </span>
+            )}
+>>>>>>> 1729564dac2176c3a5655aceb9823bf29bd8e4f9
           </NavLink>
         ))}
       </nav>
